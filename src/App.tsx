@@ -3,6 +3,7 @@ import { ApolloProvider } from '@apollo/client';
 import { client } from './lib/apollo';
 import { useState, useEffect, createContext, useContext } from 'react';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Restaurants from './pages/Restaurants';
 import RestaurantDetail from './pages/RestaurantDetail';
@@ -51,6 +52,7 @@ export default function App() {
         <Router>
           <Routes>
             <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
+            <Route path="/register" element={!user ? <Register /> : <Navigate to="/" />} />
             <Route path="/" element={user ? <Layout /> : <Navigate to="/login" />}>
               <Route index element={<Dashboard />} />
               <Route path="restaurants" element={<Restaurants />} />
