@@ -6,15 +6,22 @@ A full-stack food-ordering management platform built with **React**, **GraphQL (
 
 ## Features
 
-- 🔐 **Authentication** — JWT-based login & registration
-- 🌍 **Multi-country isolation** — Users only see restaurants and orders in their country
-- 👤 **RBAC** — Three roles: `ADMIN`, `MANAGER`, `MEMBER`
-  - **Admin**: Full access including payment methods
-  - **Manager**: Can checkout / cancel orders; sees all country orders
-  - **Member**: Can browse & create orders; sees only their own orders
-- 🍽️ **Restaurants** — Browse and search restaurants; add items to cart
-- 📦 **Orders** — Create, view, checkout, and cancel orders
+- 🔐 **Authentication** — JWT-based login & registration with input validation
+- 🌍 **Multi-country isolation** — Enforced at Prisma query level; users only see restaurants and orders in their country
+- 👤 **Policy-based RBAC** — Three roles: `ADMIN`, `MANAGER`, `MEMBER`
+  - **Admin**: Full access including payment methods and audit logs
+  - **Manager**: Can checkout orders; sees all country orders; cannot modify Admin data
+  - **Member**: Can browse & create orders, cancel own orders; sees only their own orders
+- 🍽️ **Restaurants** — Browse and search restaurants with pagination; add items to cart
+- 📦 **Orders** — Create, view, checkout, and cancel orders with status filtering
 - 💳 **Payment Methods** — Admin-only management
+- 🗂️ **Audit Logs** — Admin-only audit trail of all order actions
+- 🔒 **Soft Delete** — Orders can be soft-deleted (Admin only) without data loss
+- 🛡️ **Rate Limiting** — API rate limiting (200 req/15min) and auth rate limiting (20 req/15min)
+- 🌐 **CORS** — Configurable allowed origins
+- 📊 **Logging** — Structured request and application logging
+- 🐳 **Docker** — Dockerfile and docker-compose for containerized deployment
+- 🧪 **Tests** — Unit tests for permission guards and input validation
 
 ---
 
@@ -28,6 +35,8 @@ A full-stack food-ordering management platform built with **React**, **GraphQL (
 | Styling | Tailwind CSS v4 |
 | Auth | JWT + bcrypt |
 | Dev Server | Vite + tsx |
+| Testing | Vitest |
+| Security | express-rate-limit, cors, morgan |
 
 ---
 
@@ -40,9 +49,9 @@ A full-stack food-ordering management platform built with **React**, **GraphQL (
    npm install
    ```
 
-2. **Generate Prisma client:**
+2. **Run Prisma migrations and generate client:**
    ```bash
-   npx prisma generate
+   npx prisma migrate dev
    ```
 
 3. **Seed the database** (creates countries, users, restaurants & menu items):
@@ -54,13 +63,31 @@ A full-stack food-ordering management platform built with **React**, **GraphQL (
    ```bash
    cp .env.example .env
    ```
-   Set `JWT_SECRET` to a secure random string (optional — defaults to a dev value).
+   Set `JWT_SECRET` to a secure random string.
 
 5. **Start the development server:**
    ```bash
    npm run dev
    ```
    Open [http://localhost:3000](http://localhost:3000).
+
+---
+
+## Run with Docker
+
+```bash
+docker-compose up --build
+```
+
+The app will be available at [http://localhost:3000](http://localhost:3000).
+
+---
+
+## Run Tests
+
+```bash
+npm test
+```
 
 ---
 
@@ -88,15 +115,27 @@ The GraphQL playground is available at `/graphql` in development.
 ### Queries
 - `me` — Current authenticated user
 - `countries` — List all available countries
-- `restaurants` — Restaurants in the user's country
-- `restaurant(id)` — Single restaurant with menu
-- `orders` — Orders (admin/manager: all country orders; member: own orders)
+- `restaurants(page, pageSize)` — Paginated restaurants in the user's country
+- `restaurant(id)` — Single restaurant with menu (country-isolated)
+- `orders(status)` — Orders with optional status filter (admin/manager: all country orders; member: own orders)
 - `paymentMethods` — Admin only
+- `auditLogs` — Admin only — last 100 actions in country
 
 ### Mutations
 - `login(email, password)` — Returns JWT token
 - `register(email, password, role, countryId)` — Creates account, returns JWT token
 - `createOrder(restaurantId, items)` — Place an order
 - `checkoutOrder(orderId)` — Admin/Manager only
-- `cancelOrder(orderId)` — Admin/Manager only
+- `cancelOrder(orderId)` — Members can cancel own; Admin/Manager can cancel any in country
 - `addPaymentMethod(type, lastFour)` — Admin only
+- `softDeleteOrder(orderId)` — Admin only; soft-deletes an order
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `JWT_SECRET` | Secret for signing JWTs | `super-secret-key` (dev only) |
+| `PORT` | Server port | `3000` |
+| `ALLOWED_ORIGINS` | Comma-separated CORS origins | `http://localhost:3000,http://localhost:5173` |
+| `LOG_LEVEL` | Logging level (`debug`, `info`, `warn`, `error`) | `info` |
+
