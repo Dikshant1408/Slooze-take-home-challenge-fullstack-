@@ -60,6 +60,7 @@ export const typeDefs = gql`
 
   type Query {
     me: User
+    countries: [Country!]!
     restaurants: [Restaurant!]!
     restaurant(id: ID!): Restaurant
     orders: [Order!]!
@@ -68,6 +69,7 @@ export const typeDefs = gql`
 
   type Mutation {
     login(email: String!, password: String!): AuthPayload!
+    register(email: String!, password: String!, role: String!, countryId: ID!): AuthPayload!
     createOrder(restaurantId: ID!, items: [OrderItemInput!]!): Order!
     checkoutOrder(orderId: ID!): Order!
     cancelOrder(orderId: ID!): Order!

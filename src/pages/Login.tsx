@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, gql } from '@apollo/client';
 import { useAuth } from '../App';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
 
 const LOGIN_MUTATION = gql`
@@ -125,6 +125,13 @@ export default function Login() {
           </div>
           <p className="mt-4 text-center text-xs text-stone-400 italic">Password: password123</p>
         </div>
+
+        <p className="mt-6 text-center text-sm text-stone-500">
+          Don&apos;t have an account?{' '}
+          <Link to="/register" className="text-emerald-600 font-bold hover:underline">
+            Sign up
+          </Link>
+        </p>
       </div>
     </div>
   );

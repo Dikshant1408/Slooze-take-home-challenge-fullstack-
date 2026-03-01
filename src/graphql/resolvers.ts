@@ -1,6 +1,6 @@
 import prisma from '../lib/prisma';
-import { comparePassword, generateToken } from '../lib/auth';
-import { AuthenticationError, ForbiddenError } from 'apollo-server-express';
+import { comparePassword, generateToken, hashPassword } from '../lib/auth';
+import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server-express';
 
 export const resolvers = {
   Query: {
@@ -10,6 +10,9 @@ export const resolvers = {
         where: { id: user.id },
         include: { country: true }
       });
+    },
+    countries: async () => {
+      return prisma.country.findMany({ orderBy: { name: 'asc' } });
     },
     restaurants: async (_: any, __: any, { user }: any) => {
       if (!user) throw new AuthenticationError('Not authenticated');
@@ -82,6 +85,32 @@ export const resolvers = {
         email: user.email,
         role: user.role,
         countryId: user.countryId
+      });
+
+      return { token, user };
+    },
+
+    register: async (_: any, { email, password, role, countryId }: any) => {
+      const existing = await prisma.user.findUnique({ where: { email } });
+      if (existing) throw new UserInputError('Email already in use');
+
+      const country = await prisma.country.findUnique({ where: { id: countryId } });
+      if (!country) throw new UserInputError('Invalid country');
+
+      const validRoles = ['ADMIN', 'MANAGER', 'MEMBER'];
+      if (!validRoles.includes(role)) throw new UserInputError('Invalid role');
+
+      const hashed = await hashPassword(password);
+      const user = await prisma.user.create({
+        data: { email, password: hashed, role, countryId },
+        include: { country: true },
+      });
+
+      const token = generateToken({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        countryId: user.countryId,
       });
 
       return { token, user };
