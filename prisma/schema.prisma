@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  MEMBER
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+model Country {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  users       User[]
+  restaurants Restaurant[]
+  orders      Order[]
+}
+
+model User {
+  id             String          @id @default(uuid())
+  email          String          @unique
+  password       String
+  role           String          @default("MEMBER") // SQLite doesn't support enums well, using String
+  countryId      String
+  country        Country         @relation(fields: [countryId], references: [id])
+  orders         Order[]
+  paymentMethods PaymentMethod[]
+  createdAt      DateTime        @default(now())
+}
+
+model Restaurant {
+  id        String     @id @default(uuid())
+  name      String
+  address   String?
+  phone     String?
+  hours     String?
+  countryId String
+  country   Country    @relation(fields: [countryId], references: [id])
+  menuItems MenuItem[]
+}
+
+model MenuItem {
+  id           String      @id @default(uuid())
+  name         String
+  price        Float
+  restaurantId String
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id])
+  orderItems   OrderItem[]
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  countryId   String
+  country     Country     @relation(fields: [countryId], references: [id])
+  status      String      @default("PENDING")
+  totalAmount Float
+  items       OrderItem[]
+  createdAt   DateTime    @default(now())
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  quantity   Int
+}
+
+model PaymentMethod {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  lastFour  String
+  createdAt DateTime @default(now())
+}

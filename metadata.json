@@ -1,0 +1,5 @@
+{
+  "name": "GlobalFood: Multi-Country Ordering",
+  "description": "A production-ready food ordering system with strict RBAC and ReBAC access controls across multiple countries.",
+  "requestFramePermissions": []
+}
