@@ -33,10 +33,49 @@ A full-stack food-ordering management platform built with **React**, **GraphQL (
 | Backend | Node.js, Express, Apollo Server (GraphQL) |
 | Database | SQLite via Prisma ORM |
 | Styling | Tailwind CSS v4 |
+| Animations | Motion (Framer Motion) |
 | Auth | JWT + bcrypt |
 | Dev Server | Vite + tsx |
 | Testing | Vitest |
 | Security | express-rate-limit, cors, morgan |
+
+---
+
+## Project Structure
+
+```
+├── server.ts               # Express + Apollo Server entry point
+├── src/
+│   ├── graphql/
+│   │   ├── schema.ts       # GraphQL type definitions
+│   │   └── resolvers.ts    # Query & mutation resolvers with access control
+│   ├── lib/
+│   │   ├── auth.ts         # JWT helpers (sign, verify, hash)
+│   │   ├── permissions.ts  # RBAC/ReBAC guard functions
+│   │   ├── validation.ts   # Input validation helpers
+│   │   ├── prisma.ts       # Prisma client singleton
+│   │   ├── apollo.ts       # Apollo Client (frontend)
+│   │   └── logger.ts       # Structured logger
+│   ├── pages/
+│   │   ├── Login.tsx
+│   │   ├── Register.tsx
+│   │   ├── Dashboard.tsx
+│   │   ├── Restaurants.tsx
+│   │   ├── RestaurantDetail.tsx
+│   │   └── Orders.tsx
+│   ├── components/
+│   │   ├── Layout.tsx      # App shell with sidebar nav
+│   │   └── Toast.tsx       # Toast notification system
+│   └── App.tsx             # Router & auth context
+├── prisma/
+│   ├── schema.prisma       # Database schema
+│   └── seed.ts             # Database seeder
+├── tests/
+│   ├── permissions.test.ts
+│   └── validation.test.ts
+├── Dockerfile
+└── docker-compose.yml
+```
 
 ---
 
@@ -49,21 +88,21 @@ A full-stack food-ordering management platform built with **React**, **GraphQL (
    npm install
    ```
 
-2. **Run Prisma migrations and generate client:**
+2. **Copy and configure environment variables:**
+   ```bash
+   cp .env.example .env
+   ```
+   Edit `.env` and set `JWT_SECRET` to a secure random string (e.g. `openssl rand -hex 32`).
+
+3. **Run Prisma migrations and generate client:**
    ```bash
    npx prisma migrate dev
    ```
 
-3. **Seed the database** (creates countries, users, restaurants & menu items):
+4. **Seed the database** (creates countries, users, restaurants & menu items):
    ```bash
    npx tsx prisma/seed.ts
    ```
-
-4. **Copy environment variables:**
-   ```bash
-   cp .env.example .env
-   ```
-   Set `JWT_SECRET` to a secure random string.
 
 5. **Start the development server:**
    ```bash
