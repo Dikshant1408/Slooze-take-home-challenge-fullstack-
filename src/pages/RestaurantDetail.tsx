@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { Plus, Minus, ShoppingCart, ArrowLeft, CheckCircle2, AlertCircle, Phone, MapPin, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { showToast } from '../components/Toast';
 
 const RESTAURANT_QUERY = gql`
   query GetRestaurant($id: ID!) {
@@ -43,8 +44,13 @@ export default function RestaurantDetail() {
 
   const [createOrder] = useMutation(CREATE_ORDER_MUTATION, {
     onCompleted: () => {
+      showToast('Order placed successfully!', 'success');
       setSuccess(true);
       setTimeout(() => navigate('/orders'), 2000);
+    },
+    onError: (err) => {
+      showToast(err.message, 'error');
+      setIsOrdering(false);
     },
   });
 

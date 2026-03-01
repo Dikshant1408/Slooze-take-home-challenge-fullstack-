@@ -28,6 +28,7 @@ model Country {
   users       User[]
   restaurants Restaurant[]
   orders      Order[]
+  auditLogs   AuditLog[]
 }
 
 model User {
@@ -39,7 +40,11 @@ model User {
   country        Country         @relation(fields: [countryId], references: [id])
   orders         Order[]
   paymentMethods PaymentMethod[]
+  auditLogs      AuditLog[]
   createdAt      DateTime        @default(now())
+
+  @@index([countryId])
+  @@index([role])
 }
 
 model Restaurant {
@@ -51,6 +56,8 @@ model Restaurant {
   countryId String
   country   Country    @relation(fields: [countryId], references: [id])
   menuItems MenuItem[]
+
+  @@index([countryId])
 }
 
 model MenuItem {
@@ -60,6 +67,8 @@ model MenuItem {
   restaurantId String
   restaurant   Restaurant  @relation(fields: [restaurantId], references: [id])
   orderItems   OrderItem[]
+
+  @@index([restaurantId])
 }
 
 model Order {
@@ -72,6 +81,12 @@ model Order {
   totalAmount Float
   items       OrderItem[]
   createdAt   DateTime    @default(now())
+  deletedAt   DateTime?   // Soft delete support
+
+  @@index([userId])
+  @@index([countryId])
+  @@index([status])
+  @@index([deletedAt])
 }
 
 model OrderItem {
@@ -81,6 +96,8 @@ model OrderItem {
   menuItemId String
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
   quantity   Int
+
+  @@index([orderId])
 }
 
 model PaymentMethod {
@@ -90,4 +107,22 @@ model PaymentMethod {
   type      String
   lastFour  String
   createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  action       String
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  countryId    String
+  country      Country  @relation(fields: [countryId], references: [id])
+  resourceId   String
+  resourceType String
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([countryId])
+  @@index([resourceType])
 }

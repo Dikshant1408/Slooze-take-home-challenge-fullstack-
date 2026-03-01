@@ -39,6 +39,7 @@ export const typeDefs = gql`
     totalAmount: Float!
     items: [OrderItem!]!
     createdAt: String!
+    deletedAt: String
   }
 
   type OrderItem {
@@ -53,6 +54,16 @@ export const typeDefs = gql`
     lastFour: String!
   }
 
+  type AuditLog {
+    id: ID!
+    action: String!
+    userId: String!
+    countryId: String!
+    resourceId: String!
+    resourceType: String!
+    createdAt: String!
+  }
+
   type AuthPayload {
     token: String!
     user: User!
@@ -61,10 +72,11 @@ export const typeDefs = gql`
   type Query {
     me: User
     countries: [Country!]!
-    restaurants: [Restaurant!]!
+    restaurants(page: Int, pageSize: Int): [Restaurant!]!
     restaurant(id: ID!): Restaurant
-    orders: [Order!]!
+    orders(status: String): [Order!]!
     paymentMethods: [PaymentMethod!]!
+    auditLogs: [AuditLog!]!
   }
 
   type Mutation {
@@ -74,6 +86,7 @@ export const typeDefs = gql`
     checkoutOrder(orderId: ID!): Order!
     cancelOrder(orderId: ID!): Order!
     addPaymentMethod(type: String!, lastFour: String!): PaymentMethod!
+    softDeleteOrder(orderId: ID!): Order!
   }
 
   input OrderItemInput {

@@ -1,8 +1,9 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../App';
-import { LogOut, Utensils, ClipboardList, LayoutDashboard, Globe } from 'lucide-react';
+import { LogOut, Utensils, ClipboardList, LayoutDashboard, Globe, Shield, CreditCard } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { ToastContainer } from './Toast';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -18,11 +19,14 @@ export default function Layout() {
     navigate('/login');
   };
 
+  // Role-based navigation items
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { name: 'Restaurants', path: '/restaurants', icon: Utensils },
-    { name: 'Orders', path: '/orders', icon: ClipboardList },
-  ];
+    { name: 'Dashboard', path: '/', icon: LayoutDashboard, roles: ['ADMIN', 'MANAGER', 'MEMBER'] },
+    { name: 'Restaurants', path: '/restaurants', icon: Utensils, roles: ['ADMIN', 'MANAGER', 'MEMBER'] },
+    { name: 'Orders', path: '/orders', icon: ClipboardList, roles: ['ADMIN', 'MANAGER', 'MEMBER'] },
+    { name: 'Payments', path: '/payments', icon: CreditCard, roles: ['ADMIN'] },
+    { name: 'Audit Logs', path: '/audit', icon: Shield, roles: ['ADMIN'] },
+  ].filter((item) => user?.role && item.roles.includes(user.role));
 
   return (
     <div className="min-h-screen bg-stone-50 flex">
@@ -80,6 +84,8 @@ export default function Layout() {
           <Outlet />
         </div>
       </main>
+
+      <ToastContainer />
     </div>
   );
 }

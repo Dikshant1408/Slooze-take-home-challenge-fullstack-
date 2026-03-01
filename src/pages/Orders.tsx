@@ -2,10 +2,12 @@ import { useQuery, useMutation, gql } from '@apollo/client';
 import { useAuth } from '../App';
 import { ClipboardList, CheckCircle, XCircle, Clock, AlertCircle, ShoppingBag } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useState } from 'react';
+import { showToast } from '../components/Toast';
 
 const ORDERS_QUERY = gql`
-  query GetOrders {
-    orders {
+  query GetOrders($status: String) {
+    orders(status: $status) {
       id
       status
       totalAmount
@@ -40,12 +42,34 @@ const CANCEL_MUTATION = gql`
   }
 `;
 
+const STATUS_OPTIONS = [
+  { label: 'All', value: '' },
+  { label: 'Pending', value: 'PENDING' },
+  { label: 'Paid', value: 'PAID' },
+  { label: 'Cancelled', value: 'CANCELLED' },
+];
+
 export default function Orders() {
   const { user } = useAuth();
-  const { data, loading, error, refetch } = useQuery(ORDERS_QUERY);
+  const [statusFilter, setStatusFilter] = useState('');
+  const { data, loading, error, refetch } = useQuery(ORDERS_QUERY, {
+    variables: { status: statusFilter || undefined },
+  });
 
-  const [checkout] = useMutation(CHECKOUT_MUTATION, { onCompleted: () => refetch() });
-  const [cancel] = useMutation(CANCEL_MUTATION, { onCompleted: () => refetch() });
+  const [checkout] = useMutation(CHECKOUT_MUTATION, {
+    onCompleted: () => {
+      showToast('Order checked out successfully!', 'success');
+      refetch();
+    },
+    onError: (err) => showToast(err.message, 'error'),
+  });
+  const [cancel] = useMutation(CANCEL_MUTATION, {
+    onCompleted: () => {
+      showToast('Order cancelled.', 'info');
+      refetch();
+    },
+    onError: (err) => showToast(err.message, 'error'),
+  });
 
   if (loading) return <div className="space-y-6">
     {[1, 2, 3].map(i => <div key={i} className="h-40 bg-stone-200 rounded-[2rem] animate-pulse"></div>)}
@@ -60,11 +84,29 @@ export default function Orders() {
 
   return (
     <div className="space-y-8">
-      <header>
-        <h1 className="text-3xl font-bold text-stone-900 mb-2 tracking-tight">Order History</h1>
-        <p className="text-stone-500 font-medium">
-          {canManage ? `Managing orders for ${user.country.name}` : 'View and track your recent orders'}
-        </p>
+      <header className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-stone-900 mb-2 tracking-tight">Order History</h1>
+          <p className="text-stone-500 font-medium">
+            {canManage ? `Managing orders for ${user.country.name}` : 'View and track your recent orders'}
+          </p>
+        </div>
+        {/* Order history filtering */}
+        <div className="flex items-center gap-2 bg-white border border-stone-200 rounded-2xl p-1 shadow-sm">
+          {STATUS_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setStatusFilter(opt.value)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
+                statusFilter === opt.value
+                  ? 'bg-emerald-600 text-white shadow'
+                  : 'text-stone-500 hover:bg-stone-50'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </header>
 
       <div className="space-y-6">
@@ -120,7 +162,7 @@ export default function Orders() {
                     <p className="text-3xl font-bold text-stone-900">${order.totalAmount.toFixed(2)}</p>
                   </div>
 
-                  {canManage && order.status === 'PENDING' && (
+                  {order.status === 'PENDING' && (
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => cancel({ variables: { orderId: order.id } })}
@@ -129,13 +171,15 @@ export default function Orders() {
                         <XCircle size={18} />
                         Cancel
                       </button>
-                      <button
-                        onClick={() => checkout({ variables: { orderId: order.id } })}
-                        className="flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-100"
-                      >
-                        <CheckCircle size={18} />
-                        Checkout
-                      </button>
+                      {canManage && (
+                        <button
+                          onClick={() => checkout({ variables: { orderId: order.id } })}
+                          className="flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-100"
+                        >
+                          <CheckCircle size={18} />
+                          Checkout
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
