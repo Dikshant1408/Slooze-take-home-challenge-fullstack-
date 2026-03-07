@@ -8,6 +8,8 @@ import Dashboard from './pages/Dashboard';
 import Restaurants from './pages/Restaurants';
 import RestaurantDetail from './pages/RestaurantDetail';
 import Orders from './pages/Orders';
+import Payments from './pages/Payments';
+import AuditLogs from './pages/AuditLogs';
 import Layout from './components/Layout';
 
 interface AuthContextType {
@@ -58,6 +60,8 @@ export default function App() {
               <Route path="restaurants" element={<Restaurants />} />
               <Route path="restaurants/:id" element={<RestaurantDetail />} />
               <Route path="orders" element={<Orders />} />
+              <Route path="payments" element={<Payments />} />
+              <Route path="audit" element={<AuditLogs />} />
             </Route>
           </Routes>
         </Router>
